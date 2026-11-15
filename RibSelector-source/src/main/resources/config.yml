@@ -1,0 +1,53 @@
+# ===================== RibSelector =====================
+# Put this same plugin + config on BOTH servers.
+# The ONLY line that should be different on each server is "this-server".
+#
+#   On the FFA server:  this-server: ffa
+#   On the SMP server:  this-server: smp
+#
+# IMPORTANT: every server players get sent TO needs this in server.properties:
+#   accept-transfers=true
+# ========================================================
+
+this-server: ""
+
+# Text at the top of the menu
+menu:
+  title: "Pick a server to play."
+  title-color: "#AAAAAA"
+  columns: 2
+  button-width: 160
+
+# The compass players get
+compass:
+  give-on-join: true
+  give-on-respawn: true
+  # Hotbar slot 0-8 (4 = middle)
+  slot: 4
+  name: "&c&lServer Selector &7(Right Click)"
+  lore:
+    - "&7Right click to pick a server!"
+  # Players can't drop, move or lose it
+  locked: true
+
+# The buttons. Colors can be hex (#FF0000) or names (red, gold, aqua...)
+servers:
+  ffa:
+    name: "RIB FFA"
+    color: "#FF3B3B"
+    host: "107.155.112.138"
+    port: 50432
+    tooltip: "Click to join Rib FFA"
+  smp:
+    name: "RIB SMP"
+    color: "#3BFF7A"
+    host: "rib.survival-zone.com"
+    port: 25565
+    tooltip: "Click to join Rib SMP"
+
+messages:
+  sending: "&aSending you to %server%&a..."
+  already-here: "&cYou're already on %server%&c!"
+  unknown: "&cThat server doesn't exist."
+  reloaded: "&aRibSelector reloaded."
+  given: "&aGave the server selector to %player%."

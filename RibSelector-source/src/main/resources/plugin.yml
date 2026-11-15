@@ -1,0 +1,20 @@
+name: RibSelector
+version: '${project.version}'
+main: dev.rib.selector.RibSelector
+api-version: '1.21'
+description: Server selector compass for Rib FFA and Rib SMP.
+commands:
+  servers:
+    description: Open the server selector.
+    aliases: [server-selector, hub]
+  ribserver:
+    description: Join one of the Rib servers.
+    usage: /ribserver <id>
+  ribselector:
+    description: RibSelector admin commands.
+    usage: /ribselector <reload|give> [player]
+    permission: ribselector.admin
+permissions:
+  ribselector.admin:
+    description: Reload the config and give compasses.
+    default: op
