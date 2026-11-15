@@ -150,10 +150,16 @@ public final class RibSelector extends JavaPlugin implements Listener, TabExecut
                 + ",columns:" + Math.max(1, getConfig().getInt("menu.columns", 2))
                 + ",actions:[" + actions + "]}";
 
-        boolean ok = Bukkit.dispatchCommand(Bukkit.getConsoleSender(),
-                "minecraft:dialog show " + player.getUniqueId() + " " + dialog);
-        if (!ok) {
-            getLogger().warning("Couldn't open the dialog for " + player.getName() + ". Is the server on 1.21.6 or newer?");
+        // Target by name: some servers' UUIDs don't resolve as a player selector.
+        try {
+            boolean ok = Bukkit.dispatchCommand(Bukkit.getConsoleSender(),
+                    "minecraft:dialog show " + player.getName() + " " + dialog);
+            if (!ok) {
+                getLogger().warning("Couldn't open the dialog for " + player.getName() + ".");
+            }
+        } catch (Exception e) {
+            getLogger().warning("Couldn't open the dialog for " + player.getName() + ": " + e.getMessage());
+            player.sendMessage(text("&cThe server menu couldn't open. Use &f/ribserver ffa &cor &f/ribserver smp&c."));
         }
     }
 
