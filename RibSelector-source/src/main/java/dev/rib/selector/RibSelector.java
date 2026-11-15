@@ -38,6 +38,8 @@ public final class RibSelector extends JavaPlugin implements Listener, TabExecut
     private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacyAmpersand();
 
     private NamespacedKey key;
+    /** Which server id this is, detected from the server's port (or set manually in the config). */
+    private String detected = "";
 
     @Override
     public void onEnable() {
@@ -51,12 +53,7 @@ public final class RibSelector extends JavaPlugin implements Listener, TabExecut
                 c.setTabCompleter(this);
             }
         }
-        String here = thisServer();
-        if (here.isEmpty()) {
-            getLogger().warning("this-server is not set in config.yml. Set it to the id of THIS server (e.g. ffa or smp).");
-        } else {
-            getLogger().info("This server is '" + here + "'.");
-        }
+        detectServer();
         // Give compasses to anyone already online (e.g. after /reload).
         for (Player p : Bukkit.getOnlinePlayers()) {
             if (getConfig().getBoolean("compass.give-on-join", true)) giveCompass(p);
@@ -65,8 +62,33 @@ public final class RibSelector extends JavaPlugin implements Listener, TabExecut
 
     // ------------------------------------------------------------------ compass
 
+    /** The id of the server this plugin is running on ("ffa", "smp", ...). */
     private String thisServer() {
-        return getConfig().getString("this-server", "").trim().toLowerCase(Locale.ROOT);
+        String set = getConfig().getString("this-server", "auto").trim().toLowerCase(Locale.ROOT);
+        if (!set.isEmpty() && !set.equals("auto")) return set;
+        return detected;
+    }
+
+    /** Works out which configured server this is by matching this server's port. */
+    private void detectServer() {
+        detected = "";
+        int myPort = getServer().getPort();
+        ConfigurationSection servers = getConfig().getConfigurationSection("servers");
+        if (servers != null) {
+            for (String id : servers.getKeys(false)) {
+                if (servers.getInt(id + ".port", -1) == myPort) {
+                    detected = id.toLowerCase(Locale.ROOT);
+                    break;
+                }
+            }
+        }
+        String here = thisServer();
+        if (here.isEmpty()) {
+            getLogger().warning("Couldn't detect which server this is (port " + myPort + " isn't in the config)."
+                    + " Set this-server in config.yml to its id, e.g. ffa or smp.");
+        } else {
+            getLogger().info("This server is '" + here + "' (port " + myPort + ").");
+        }
     }
 
     private Component text(String legacy) {
@@ -134,7 +156,7 @@ public final class RibSelector extends JavaPlugin implements Listener, TabExecut
             ConfigurationSection s = servers.getConfigurationSection(id);
             if (s == null) continue;
             String name = s.getString("name", id.toUpperCase(Locale.ROOT));
-            String tooltip = id.equalsIgnoreCase(here) ? "You're already on this server" : s.getString("tooltip", "Click to join " + name);
+            String tooltip = id.equalsIgnoreCase(here) ? "You are already connected to this server" : s.getString("tooltip", "Click to join " + name);
             if (!actions.isEmpty()) actions.append(',');
             actions.append("{label:{text:").append(q(name))
                     .append(",color:").append(q(color(s.getString("color"))))
@@ -173,7 +195,8 @@ public final class RibSelector extends JavaPlugin implements Listener, TabExecut
         }
         String name = "&f" + s.getString("name", id);
         if (id.equalsIgnoreCase(thisServer())) {
-            player.sendMessage(text(getConfig().getString("messages.already-here", "&cYou're already on %server%&c!")
+            // The menu closes when a button is clicked; just tell them they're already here.
+            player.sendMessage(text(getConfig().getString("messages.already-here", "&cYou are already connected to this server!")
                     .replace("%server%", name)));
             return;
         }
@@ -214,6 +237,7 @@ public final class RibSelector extends JavaPlugin implements Listener, TabExecut
                 }
                 if (args[0].equalsIgnoreCase("reload")) {
                     reloadConfig();
+                    detectServer();
                     sender.sendMessage(text(getConfig().getString("messages.reloaded", "&aRibSelector reloaded.")));
                 } else if (args[0].equalsIgnoreCase("give")) {
                     Player target = args.length > 1 ? Bukkit.getPlayerExact(args[1]) : (sender instanceof Player p ? p : null);
